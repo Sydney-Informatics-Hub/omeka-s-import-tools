@@ -1,0 +1,57 @@
+import polars as pl
+from argparse import ArgumentParser
+from pathlib import Path
+
+MAX_STR_LEN = 50
+
+def abbrev(v):
+    if type(v) is str:
+        if len(v) < MAX_STR_LEN:
+            return v
+        else:
+            return v[:MAX_STR_LEN] + "..."
+    return v
+
+
+def csv_diff(a, b):
+    dfa = pl.read_csv(a)
+    dfb = pl.read_csv(b)
+    cols = dfa.columns
+    mismatches = (
+        dfa.filter(~dfa.hash_rows().is_in(dfb.hash_rows().implode()))
+           .join(dfb, on="ID", how="left", suffix="_dfb")
+       )
+    for row in mismatches.to_dicts():
+        print("-- " + row["ID"] + " " + row["Name"])
+        for col in cols:
+            if f"{col}_dfb" in row:
+                va = row[col]
+                vb = row[f"{col}_dfb"]
+                if va != vb:
+                    ava = abbrev(va)
+                    avb = abbrev(vb)
+                    print(f"   A {col}: '{ava}'")
+                    print(f"   B {col}: '{avb}'")
+
+
+
+def main():
+    ap = ArgumentParser("CSV trim")
+    ap.add_argument(
+        "-a",
+        type=Path,
+        help="CSV file A",
+    )
+    ap.add_argument(
+        "-b",
+        type=Path,
+        help="CSV file B",
+    )
+    args = ap.parse_args()
+    print(f"File A: {args.a}")
+    print(f"File B: {args.b}")
+    csv_diff(args.a, args.b)
+
+
+if __name__ == "__main__":
+    main()
