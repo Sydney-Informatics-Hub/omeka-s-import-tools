@@ -2,12 +2,15 @@ import polars as pl
 from argparse import ArgumentParser
 from pathlib import Path
 
+MAX_STR_LEN = 50
 
 def abbrev(v):
-    if v is not None:
-        return v[:20]
-    else:
-        return v
+    if type(v) is str:
+        if len(v) < MAX_STR_LEN:
+            return v
+        else:
+            return v[:MAX_STR_LEN] + "..."
+    return v
 
 
 def csv_diff(a, b):
@@ -19,7 +22,7 @@ def csv_diff(a, b):
            .join(dfb, on="ID", how="left", suffix="_dfb")
        )
     for row in mismatches.to_dicts():
-        print("-- " + row["ID"])
+        print("-- " + row["ID"] + " " + row["Name"])
         for col in cols:
             if f"{col}_dfb" in row:
                 va = row[col]
@@ -45,6 +48,8 @@ def main():
         help="CSV file B",
     )
     args = ap.parse_args()
+    print(f"File A: {args.a}")
+    print(f"File B: {args.b}")
     csv_diff(args.a, args.b)
 
 
