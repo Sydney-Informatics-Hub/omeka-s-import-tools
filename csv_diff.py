@@ -22,7 +22,7 @@ def csv_diff(a, b):
            .join(dfb, on="ID", how="left", suffix="_dfb")
        )
     for row in mismatches.to_dicts():
-        print("-- " + row["ID"] + " " + row["Name"])
+        print("-- " + row["ID"])
         for col in cols:
             if f"{col}_dfb" in row:
                 va = row[col]
