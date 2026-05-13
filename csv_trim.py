@@ -12,12 +12,17 @@ def validate_numeric(i, row, num_cols):
             except ValueError as e:
                 print(f"Bad number in row {i} col {col}: '{v}'")
 
+def csv_get_shape(input):
+    with open(input, "r", encoding='utf-8-sig') as csfh:
+        reader = csv.reader(csfh)
+        for row in reader:
+            print(len(row))
 
 def csv_trim(input, output, cols, num_cols):
     rows = []
     i = 0
-    with open(input, "r") as csfh:
-        reader = csv.reader(csfh, dialect="excel")
+    with open(input, "r", encoding='utf-8-sig') as csfh:
+        reader = csv.reader(csfh)
         for row in reader:
             if row[0]:
                 if len(row) > cols:
@@ -31,8 +36,8 @@ def csv_trim(input, output, cols, num_cols):
             if i > 1:
                 validate_numeric(i, row, num_cols)
 
-    with open(output, "w") as csfh:
-        writer = csv.writer(csfh, dialect="excel")
+    with open(output, "w", encoding="utf8") as csfh:
+        writer = csv.writer(csfh, dialect="unix")
         for row in rows:
             writer.writerow(row)
 
@@ -50,6 +55,10 @@ def main():
         help="Output",
     )
     ap.add_argument(
+        "--shape",
+        action='store_true'
+    )
+    ap.add_argument(
         "--cols",
         type=int,
         help="Number of cols"
@@ -60,10 +69,13 @@ def main():
     	help="Fields to check for numeric values"
     )
     args = ap.parse_args()
-    num_cols = []
-    if args.numeric:
-       num_cols = [ int(n) for n in args.numeric.split(',') ] 
-    csv_trim(args.input, args.output, args.cols, num_cols)
+    if args.shape:
+        csv_get_shape(args.input)
+    else:
+        num_cols = []
+        if args.numeric:
+           num_cols = [ int(n) for n in args.numeric.split(',') ] 
+        csv_trim(args.input, args.output, args.cols, num_cols)
 
 
 if __name__ == "__main__":
